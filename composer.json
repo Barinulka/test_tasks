@@ -1,0 +1,17 @@
+{
+    "name": "barinulka/parser",
+    "description": "Парсер для реестра ФНС с данными о суммах недоимок и задолжностей по пеням и штрафам",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Barinulka\\Parser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alexey Barinov",
+            "email": "barinulka@yandex.ru"
+        }
+    ],
+    "require": {}
+}

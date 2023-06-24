@@ -57,9 +57,9 @@ function sameColor(string $cell1, string $cell2) :string
  * если не четная (0) - то ячейка белая
  *
  * @param array $arr
- * @return bool
+ * @return integer
  */
-function getCellColor(array $arr) :bool
+function getCellColor(array $arr) :int
 {
     global $CMarray;
 
@@ -73,15 +73,15 @@ function getCellColor(array $arr) :bool
  * Функция определяет четное или не четное число
  *
  * @param integer $num
- * @return boolean
+ * @return integer
  */
-function isEven (int $num) :bool 
+function isEven (int $num) :int 
 {
     if ($num % 2 == 0) {
-        return true; 
+        return 1; 
     } else {
-        return false;
+        return 0;
     }
 }
 
-echo sameColor('a1', 'C6') . PHP_EOL;
+echo sameColor('a1', 'c1') . PHP_EOL;

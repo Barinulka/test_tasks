@@ -1,7 +1,7 @@
 <?php 
 
-$CMarray = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-$colors = [0 => 'Черный', 1 => 'Белый'];
+$CMarray = [1 => 'a', 2 => 'b', 3 => 'c', 4 => 'd', 5 => 'e', 6 => 'f', 7 => 'g', 8 => 'h'];
+$colors = [0 => 'Белый', 1 => 'Черный'];
 
 /**
  * Принимает названия 2-ух ячеек
@@ -15,7 +15,7 @@ function sameColor(string $cell1, string $cell2) :string
 {
     global $CMarray, $colors;
 
-    $result = '';
+    $result = $cell1 . ' : ' . $cell2 . "\r\n";
 
     // Приведение к нижнему регистру
     $cell1 = trim(strtolower($cell1));
@@ -26,48 +26,47 @@ function sameColor(string $cell1, string $cell2) :string
 
     // проверки
     if ((count($cell1Arr) < 2 || count($cell1Arr) > 2) || (count($cell2Arr) < 2 || count($cell2Arr) > 2)) {
-        return "Проверьте корректность введенных данных";
+        return $result . "Проверьте корректность введенных данных";
     }
     if (!in_array($cell1Arr[0], $CMarray) || !in_array($cell2Arr[0], $CMarray)) {
-        return "Указана несуществующая клетка";
+        return $result . "Указана несуществующая клетка";
     }
     if (($cell1Arr[1] <= 0 || $cell1Arr[1] > 8) || ($cell2Arr[1] <= 0 || $cell2Arr[1] > 8)) {
-        return "Указана несуществующая клетка";
+        return $result . "Указана несуществующая клетка";
     }
 
+    // полчуние цвета каждой ячейки
     $cell1Color = getCellColor($cell1Arr);
     $cell2Color = getCellColor($cell2Arr);
 
+    $result .= $colors[$cell1Color] . ' : ' . $colors[$cell2Color] . "\r\n";
+
     if ($cell1Color == $cell2Color) {
-        $result =  $cell1 . ' : ' . $cell2 . "\r\n" . $colors[$cell1Color] . ' : ' . $colors[$cell2Color] . "\r\n" . 'Цвета совпадают';
+        $result .= 'Цвета совпадают';
     } else {
-        $result =  $cell1 . ' : ' . $cell2 . "\r\n" . $colors[$cell1Color] . ' : ' . $colors[$cell2Color] . "\r\n" . 'Цвета не совпадают';
+        $result .= 'Цвета не совпадают';
     }
     
     return $result;
 }
 
 /**
- * Функция определяет цвет ячейки
- * 0 - черный
- * 1 - белый
+ * Функция определяет цвет ячейки по сумме цифровых значений ячейки, 
+ * при условии что a = 1, b = 2, c = 3 ..., h = 8 (массив CMarray)
+ * если сумма четная (1) - то ячейка черная
+ * если не четная (0) - то ячейка белая
  *
  * @param array $arr
- * @return integer
+ * @return bool
  */
-function getCellColor(array $arr) :int
+function getCellColor(array $arr) :bool
 {
     global $CMarray;
 
-    $col = isEven(array_search($arr[0], $CMarray) + 1);
-    $row = isEven($arr[1]);
+    $sum = array_search($arr[0], $CMarray) + $arr[1];
     
-    if ($col == $row) {
-        return 0;
-    } else {
-        return 1;
-    }
-
+    return isEven($sum);
+    
 }
 
 /**
@@ -85,4 +84,4 @@ function isEven (int $num) :bool
     }
 }
 
-echo sameColor('a1', 'c6') . PHP_EOL;
+echo sameColor('a1', 'C6') . PHP_EOL;

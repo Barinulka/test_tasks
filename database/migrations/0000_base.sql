@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS `migrations` (
+    `id` INT NOT NULL AUTO_INCREMENT , 
+    `name` VARCHAR(255) NOT NULL , 
+    `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , 
+    PRIMARY KEY (`id`)
+) 
+ENGINE = InnoDB;

@@ -69,4 +69,53 @@ class DebtamRepository implements DebtamRepositoryInterface
             $result['created_date']   
         );
     }
+
+    public function getTotalDebt() 
+    {
+
+        // Выбираем 10 компаний с наибольшей суммарной задолжностью
+        $statement = $this->connection->query(
+            'SELECT inn, org_name, SUM(sum_arrears)+SUM(sum_penalties)+SUM(sum_ticket)+SUM(total_sum_arrears) total 
+                FROM `debtam` 
+                GROUP BY inn
+                ORDER BY total DESC
+                LIMIT 10'
+        );
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    }
+
+    public function getTotalDebtByTaxType() 
+    {
+
+        // Выборка по 10 позиций, для удобства вывода в консоль
+        $statement = $this->connection->query(
+            'SELECT tax_name, SUM(sum_arrears)+SUM(sum_penalties)+SUM(sum_ticket)+SUM(total_sum_arrears) as total
+                FROM `debtam`
+                GROUP BY tax_name
+                ORDER BY total DESC
+                LIMIT 10'
+        );
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    }
+
+    public function getAvgDebtByRegion() 
+    {
+
+        // Выборка по 10 позиций, для удобства вывода в консоль
+        $statement = $this->connection->query(
+            'SELECT SUBSTRING(inn, 1, 2) as region, AVG(sum_arrears)+AVG(sum_penalties)+AVG(sum_ticket)+AVG(total_sum_arrears) as total
+                FROM `debtam`
+                GROUP BY region
+                ORDER BY region DESC
+                LIMIT 10'
+        );
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    }
+
 }

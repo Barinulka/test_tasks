@@ -19,10 +19,10 @@ class Parser implements ParserInterface
         $dirFiles = dirname(__FILE__, 3) . '/storage/';
         // Получаем список всех файлов
         $allFiles = glob($dirFiles . '*.xml');
+        $return = [];
         $parseFiles = [];
 
         // Ищем выполненные файлы
-        $doneFiles = array();
         $query = $this->connection->query(
             'SELECT name from `parse_info`'
         );
@@ -30,15 +30,20 @@ class Parser implements ParserInterface
         $data = $query->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($data)) {
-            return $allFiles;
-        }
+            $return = $allFiles;
+        } 
 
-        // Набираем массив 
-        foreach ($data as $val) {
-            $parseFiles[] = $dirFiles . $val['name'];
+        if (!empty($data)) {
+            // Набираем массив 
+            foreach ($data as $val) {
+                $parseFiles[] = $dirFiles . $val['name'];
+            }
+
+            $return = array_diff($allFiles, $parseFiles);
         }
- 
-        return array_diff($allFiles, $parseFiles);
+        
+        // Забераем по 10 файлов, задел под cron
+        return array_slice($return, 0, 10);
     }
 
     public function parse()
@@ -95,6 +100,9 @@ class Parser implements ParserInterface
             $query->execute([
                 ':name' => basename($file)
             ]);
+
+            // Удаление файла после парсинга
+            // unlink($file);
 
         }
 

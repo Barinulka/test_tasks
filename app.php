@@ -39,8 +39,14 @@ if (isset($argv[1])) {
 
             break;
         default :
-            echo "parse - старт парсинга\r\n";
+            echo "parse - Cтарт парсинга" . PHP_EOL;
+            echo "totalDebt - Компании с наибольшей суммарной задолженностью" . PHP_EOL;
+            echo "totalTaxName - Общая задолженность всех компаний по каждому виду налога" . PHP_EOL;
+            echo "totalAvg - Средняя задолженность по регионам" . PHP_EOL;
     }
 } else {
-    echo "parse - старт парсинга" . PHP_EOL;
+    echo "parse - Cтарт парсинга" . PHP_EOL;
+    echo "totalDebt - Компании с наибольшей суммарной задолженностью" . PHP_EOL;
+    echo "totalTaxName - Общая задолженность всех компаний по каждому виду налога" . PHP_EOL;
+    echo "totalAvg - Средняя задолженность по регионам" . PHP_EOL;
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Barinulka\Parser\Migrations\Interface;
+namespace Barinulka\Parser\Migrations;
 
 use PDO;
 

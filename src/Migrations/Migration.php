@@ -1,8 +1,9 @@
 <?php
 namespace Barinulka\Parser\Migrations;
 
-use Barinulka\Parser\Migrations\Interface\MigrationInterface;
 use PDO;
+use Barinulka\Parser\Exceptions\MigrationException;
+use Barinulka\Parser\Migrations\MigrationInterface;
 
 class Migration implements MigrationInterface
 {

@@ -1,4 +1,4 @@
-CREATE TABLE `debtam` (
+CREATE TABLE IF NOT EXISTS `debtam` (
     `id` INT NOT NULL AUTO_INCREMENT , 
     `tax_name` VARCHAR(255) NOT NULL , 
     `org_name` VARCHAR(255) NOT NULL , 

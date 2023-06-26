@@ -1,10 +1,12 @@
 <?php
 namespace Barinulka\Parser\Parser;
 
+use PDO;
+use DOMDocument;
 use Barinulka\Parser\Models\Debtam;
 use Barinulka\Parser\Repositories\DebtamRepository\DebtamRepository;
-use PDO;
-use SimpleXMLElement;
+use Exception;
+use ZipArchive;
 
 class Parser implements ParserInterface
 {
@@ -107,5 +109,188 @@ class Parser implements ParserInterface
         }
 
         echo "*** Парсер закончил работу!" . PHP_EOL;
+    }
+
+    public function check() 
+    {
+        $parseData = $this->domParseTable(12);
+
+        $loadDate = strtotime(trim($parseData[2]));
+
+        // Загрузим из БД запись о последнем загруженном файле
+        $query = $this->connection->query(
+            'SELECT update_date FROM parse_check ORDER BY update_date DESC LIMIT 1'
+        );
+
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+
+        if ($loadDate > $result['update_date']) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    public function load() 
+    {
+        $parseData = $this->domParseTable(8);
+
+        $loadUrl = trim($parseData[2]);
+        $name = preg_match("/data-(.*)$/m", $parseData[2], $matches);
+        $fileName = $matches[0];
+
+        $path = dirname(__FILE__, 3) . '/storage/' . $fileName;
+
+        if ($this->isIssetFile($fileName)) {
+            echo "Нет доступных фалов для загрузки" . PHP_EOL;
+        } else {
+
+            if (!file_exists($path)) {
+                echo "Скачивание файла..." . PHP_EOL;
+                $this->loadFile($loadUrl, $path);
+            }
+    
+            if (file_exists($path)) {
+                echo "Распаковка скаченного файла..." . PHP_EOL;
+                $this->unzip($path);
+            }
+                
+            $str = preg_match("/\bdata-[0-9]{0,8}\b/m", $parseData[2], $matches);
+            $arr = explode('-', $matches[0]);
+    
+            $fileTime = strtotime($arr[1]);
+           
+            // Запись в БД ин-фы о загруженном файле
+            $statement = $this->connection->prepare(
+                'INSERT INTO parse_check (name, update_date) 
+                    VALUES (:name, :update_date)'
+            );
+    
+            $statement->execute([
+                ':name' => $fileName, 
+                ':update_date' => $fileTime, 
+            ]);
+    
+            echo "Файлы распакованы и готовы к парсингу" . PHP_EOL;
+        }
+
+    }
+
+    private function getHtmlContent() :string
+    {
+        $ch = curl_init('https://www.nalog.gov.ru/opendata/7707329152-debtam/');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+
+        $html = curl_exec($ch);
+        curl_close($ch);
+
+        return $html;
+    }
+
+    private function domParseTable(int $row) :array
+    {
+        $html = $this->getHtmlContent();
+
+        // Забираем контет
+		$dom = new DOMDocument;
+        libxml_use_internal_errors(true);
+		$dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+        libxml_use_internal_errors(false);
+		$node = $dom->getElementsByTagName('tr');
+
+        $tbodies = [];
+
+        // Получим массив из <tr>
+        foreach ($node as $item) {
+            $tbodies[] = preg_split("/[\n\r]+/", trim($item->textContent));
+        }
+
+        // Достаем нужный элемент
+        $result = [];
+        foreach ($tbodies as $elem) {
+            if ($elem[0] == $row) {
+                $result = $elem;
+            }
+        }
+
+        return $result;
+
+    }
+
+    private function loadFile(string $url, string $path)
+    {
+        try {
+            $fp = fopen($path, 'w');
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_FILE, $fp);
+            $data = curl_exec($ch);
+            curl_close($ch);
+            fclose($fp);
+
+            echo 'file loaded' . PHP_EOL;
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    private function unzip($path)
+    {
+        $zip = new ZipArchive();
+                
+        if ($zip->open($path) === true) {
+            
+            // Архивы большие, ограничил число файлов для распаковки
+            // $zip->numFiles - будет идти по всему файлу
+            for($i = 0; $i < 11; $i++) { 
+                $filename = $zip->getNameIndex($i);
+
+                // Архив может прилететь с вложенной папкой
+                // будем ее игнорить и сразу брать нужные файлы
+                if (!strpos($filename, '.xml')) continue;
+
+                $fileinfo = pathinfo($filename);
+                $file = dirname(__FILE__, 3) . '/storage/' . $fileinfo['basename'];
+                $dir = dirname($file);
+                // Пересохраняем файлы в каталог
+                $fpr = $zip->getStream($filename);
+                $fpw = fopen($file, 'w');
+                while($data = fread($fpr, 1024)) {
+                    fwrite($fpw, $data);
+                }
+                fclose($fpr);
+                fclose($fpw);
+
+            }                   
+            $zip->close();
+
+            echo "Архив распакован!" . PHP_EOL; 
+
+            // Удаление масива после рапаковки
+            // unlink($path);                   
+        }
+    }
+
+    private function isIssetFile($fileName) :bool
+    {
+        $isIsset = false;
+
+        $statement = $this->connection->prepare(
+            'SELECT id FROM parse_check WHERE name = :name'
+        );
+
+        $statement->execute([
+            ':name' => $fileName, 
+        ]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        
+        if (!empty($result)) {
+            $isIsset = true;
+        }
+
+        return $isIsset;
     }
 }

@@ -1,0 +1,52 @@
+Принцип инверсии зависимостей.
+
+Здесь имеется в виду то, что классы не должны зависить друг от друга, а от абстракции (интерфейса).
+
+Возьмем некий сервис по ремонту автомобилей, например.
+
+Есть класс Service, который делает проверку двигателя автомобиля
+
+class Service {
+    public function checkEngine() {
+        $car = new Car();
+        $engine = $car->getEngine();
+        ...
+    }
+}
+
+Есть класс машины Car
+
+class Car {
+    public function getEngine();
+    ...
+}
+
+Service напряму зависит от класса Car, и если мы как-то изменим Car,
+то придется эти изменения учитывать в классе Service, иначе Service может перестать работать
+
+Согласно принципу инверсии зависимостей введем некую абстракцию (интерфейс) CarInterface.
+
+interface CarInterface() {
+    public function getEngine();
+}
+
+class Car implements CarInterface {
+    public function getEngine() {
+        ...
+        return $engine;
+    }
+}
+
+class Service {
+    public function __constuctor(
+        private CarInterface $carInterface
+    ){}
+
+    public function checkEngine() {
+        $engine = $this->carInterface->getEngine();
+        ...
+    }
+}
+
+В этом случае как раз происходит инверсия зависимостей, класс Service перестает быть зависимым от 
+класса Car, он становится привязанным к абстракции CarInterface, который содержит любой объект, реализующий этот интерфейс
